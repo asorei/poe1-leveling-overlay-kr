@@ -1,0 +1,13 @@
+﻿zone:템플러의 실험실
+Top right is the Laboratory
+Find the map device and wait to talk to Kirac
+Then go back to Oriath and go bottom right for the Fallen Courts
+
+zone:몰락한 템플러의 법정
+Left hand wall follow to find Dominus' office
+Pick up the Key and return to Oriath for the entrance to the Haunted Reliquary in the bottom left
+
+zone:으스스한 성유물 보관실
+Use the key on both sides of the door to open the Vault
+Kill everything then talk to Kirac in your Hideout
+If you don't have a Hideout, talk to Helena in town to obtain one
