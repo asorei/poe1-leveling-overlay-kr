@@ -155,3 +155,12 @@ SetNote(zoneName) {
         UpdateNativeGui(notesWin, zoneName, "현재 액트(" . currentAct . ")에서 정보를 찾을 수 없습니다.")
     }
 }
+
+; 실제 지역 진입 시 마지막 지역을 저장합니다.
+RememberLastZone(zoneName) {
+    global lastZone
+
+    lastZone := Trim(zoneName)
+    if (lastZone != "")
+        SaveSetting("Status", "lastZone", lastZone)
+}

@@ -16,7 +16,7 @@ global ATTACHED_WINDOW_GAP := 10
 ; GUI 생성 및 초기화 함수
 CreateWindows() {
     global guideWin, notesWin, actSelectorGui, actDDL, guideHandle
-    global guideX, guideY, winTransparency, fontName, currentAct, guidePath
+    global guideX, guideY, winTransparency, fontName, currentAct, guidePath, lastZone, noteMap
 
     ; 메인 창 생성 (+E0x20: 클릭 통과)
     guideWin := Gui("+AlwaysOnTop -Caption +ToolWindow +LastFound +E0x20")
@@ -47,7 +47,11 @@ CreateWindows() {
     ; 2. 데이터 로드 및 핸들 동기화
     if FileExist(guidePath)
         UpdateNativeGui(guideWin, currentAct, FileRead(guidePath, "UTF-8"))
-    SetNote("해안 지대")
+    initialZone := Trim(lastZone)
+    if (initialZone != "" && noteMap.Has(initialZone))
+        SetNote(initialZone)
+    else
+        SetNote("해안 지대")
 
     ; 메시지 핸들러 등록
     OnMessage(0x0232, WM_EXITSIZEMOVE)

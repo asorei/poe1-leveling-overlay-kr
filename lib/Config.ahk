@@ -9,12 +9,13 @@ global notesPath := baseDataPath . currentAct . "\notes.txt"
 global iniPath := "config.ini"
 global toggleHotkey := ""
 global adminAutoRun := 0
+global lastZone := "해안 지대"
 
 ; 설정 초기화 및 로드 함수
 LoadSettings() {
     global iniPath, guideX, guideY
     global fontName, fontSizeTitle, fontSizeContent, winTransparency
-    global currentAct, currentPart, guidePath, notesPath, baseDataPath, toggleHotkey, adminAutoRun
+    global currentAct, currentPart, guidePath, notesPath, baseDataPath, toggleHotkey, adminAutoRun, lastZone
 
     ; config.ini 파일이 없으면 기본 설정값으로 자동 생성
     if !FileExist(iniPath) {
@@ -26,6 +27,7 @@ LoadSettings() {
         IniWrite(128, iniPath, "Style", "Transparency")
         IniWrite("F5", iniPath, "Hotkey", "Toggle") ; 기본 단축키 설정
         IniWrite("Act 1", iniPath, "Status", "lastAct")
+        IniWrite("해안 지대", iniPath, "Status", "lastZone")
         IniWrite(0, iniPath, "General", "AdminAutoRun") ; 기본값 비활성화
     }
 
@@ -41,6 +43,7 @@ LoadSettings() {
     
     ; 마지막 액트 정보 로드 및 경로 동기화
     currentAct := IniRead(iniPath, "Status", "lastAct", "Act 1")
+    lastZone := IniRead(iniPath, "Status", "lastZone", "해안 지대")
     local actNum := SubStr(currentAct, 5) + 0
     currentPart := (actNum <= 5) ? "Part 1" : "Part 2"
     guidePath := baseDataPath . currentAct . "\guide.txt"

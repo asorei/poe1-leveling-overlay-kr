@@ -66,6 +66,7 @@ ProcessLogLines(logText) {
                 isLevel1Generating := false ; 플래그 리셋
                 ManualSetAct(1) ; 강제로 1장으로 변경
                 SetNote(zoneName)
+                RememberLastZone(zoneName)
                 continue
             }
             
@@ -75,6 +76,7 @@ ProcessLogLines(logText) {
                 continue
             UpdateActInfo(zoneName)
             SetNote(zoneName)
+            RememberLastZone(zoneName)
         }
         else if InStr(l, "레벨이 되었습니다") {
             ;ToolTip("Level Up!")
