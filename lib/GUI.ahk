@@ -80,15 +80,35 @@ UpdateNativeGui(guiObj, title, content) {
         "B,", {color: "c00FFFF", skip: 3}, ; Cyan (물색보다 선명)
         "<",  {color: "cFF9999", skip: 2}, ; 부드러운 빨강
         "+",  {color: "c99FF99", skip: 2}, ; 부드러운 녹색
+
+    ; 스타일 정의 맵 (리팩토링 포인트: if-else 제거)
+    static STYLES := Map(
+        "G,", {color: "c39FF14", skip: 3}, ; Neon Green
+        "Y,", {color: "cFFFF33", skip: 3}, ; Neon Yellow
+        "R,", {color: "cFF3131", skip: 3}, ; Neon Red
+        "B,", {color: "c00FFFF", skip: 3}, ; Cyan (물색보다 선명)
+        "<",  {color: "cFF9999", skip: 2}, ; 부드러운 빨강
+        "+",  {color: "c99FF99", skip: 2}, ; 부드러운 녹색
         ">",  {color: "c99CCFF", skip: 2}  ; 부드러운 파랑
     )
 
     local maxW := 0, tw := 0, lines := StrSplit(content, "`n", "`r")
     local cleanLine := "", actualW := 0
 
-    ; 1. 기존 컨트롤 제거 (확실하게 파괴)
-    for ctrl in guiObj
-        try DllCall("DestroyWindow", "ptr", ctrl.Hwnd)
+    ; 1. 기존 GUI 파괴 및 재건설 (API 직접 호출로 인한 메모리 릭 및 크래시 방지)
+    if (guiObj == guideWin) {
+        guideWin.Destroy()
+        guideWin := Gui("+AlwaysOnTop -Caption +ToolWindow +LastFound +E0x20")
+        guideWin.BackColor := "000000"
+        WinSetTransparent(winTransparency, guideWin)
+        guiObj := guideWin
+    } else if (guiObj == notesWin) {
+        notesWin.Destroy()
+        notesWin := Gui("+AlwaysOnTop -Caption +ToolWindow +LastFound +E0x20")
+        notesWin.BackColor := "000000"
+        WinSetTransparent(winTransparency, notesWin)
+        guiObj := notesWin
+    }
 
     ; 2. 측정 전용 임시 Gui 생성 (독립적 측정을 위함)
     local measureGui := Gui()
@@ -302,10 +322,24 @@ ShowSettingsGui() {
     fontGui.Show()
 
     SaveAndApply(n, st, sc, tr, hk) {
+        ; 입력값 검증 (비정상 입력값으로 인한 재부팅 무한 크래시 락 방지)
+        if (!IsInteger(st) || Integer(st) <= 0 || Integer(st) > 100) {
+            MsgBox("제목 폰트 크기는 1에서 100 사이의 정수여야 합니다.", "설정 오류", "Icon! 4096")
+            return
+        }
+        if (!IsInteger(sc) || Integer(sc) <= 0 || Integer(sc) > 100) {
+            MsgBox("내용 폰트 크기는 1에서 100 사이의 정수여야 합니다.", "설정 오류", "Icon! 4096")
+            return
+        }
+        if (!IsInteger(tr) || Integer(tr) < 0 || Integer(tr) > 255) {
+            MsgBox("투명도는 0에서 255 사이의 정수여야 합니다.", "설정 오류", "Icon! 4096")
+            return
+        }
+
         SaveSetting("Font", "Name", n)
-        SaveSetting("Font", "SizeTitle", st)
-        SaveSetting("Font", "SizeContent", sc)
-        SaveSetting("Style", "Transparency", tr)
+        SaveSetting("Font", "SizeTitle", Integer(st))
+        SaveSetting("Font", "SizeContent", Integer(sc))
+        SaveSetting("Style", "Transparency", Integer(tr))
         SaveSetting("Hotkey", "Toggle", hk)
         
         fontGui.Opt("-AlwaysOnTop") ; 설정창의 AlwaysOnTop 속성을 일시적으로 해제
