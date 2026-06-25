@@ -80,15 +80,6 @@ UpdateNativeGui(guiObj, title, content) {
         "B,", {color: "c00FFFF", skip: 3}, ; Cyan (물색보다 선명)
         "<",  {color: "cFF9999", skip: 2}, ; 부드러운 빨강
         "+",  {color: "c99FF99", skip: 2}, ; 부드러운 녹색
-
-    ; 스타일 정의 맵 (리팩토링 포인트: if-else 제거)
-    static STYLES := Map(
-        "G,", {color: "c39FF14", skip: 3}, ; Neon Green
-        "Y,", {color: "cFFFF33", skip: 3}, ; Neon Yellow
-        "R,", {color: "cFF3131", skip: 3}, ; Neon Red
-        "B,", {color: "c00FFFF", skip: 3}, ; Cyan (물색보다 선명)
-        "<",  {color: "cFF9999", skip: 2}, ; 부드러운 빨강
-        "+",  {color: "c99FF99", skip: 2}, ; 부드러운 녹색
         ">",  {color: "c99CCFF", skip: 2}  ; 부드러운 파랑
     )
 
