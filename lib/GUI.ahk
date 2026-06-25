@@ -87,13 +87,19 @@ UpdateNativeGui(guiObj, title, content) {
     local cleanLine := "", actualW := 0
 
     ; 1. 기존 GUI 파괴 및 재건설 (API 직접 호출로 인한 메모리 릭 및 크래시 방지)
+    ; 파괴하기 전에 기존 윈도우의 위치를 획득하여 위치 이동 문제를 방지합니다.
+    local prevX := "", prevY := ""
     if (guiObj == guideWin) {
+        if (IsSet(guideWin) && guideWin.Hwnd)
+            try guideWin.GetPos(&prevX, &prevY)
         guideWin.Destroy()
         guideWin := Gui("+AlwaysOnTop -Caption +ToolWindow +LastFound +E0x20")
         guideWin.BackColor := "000000"
         WinSetTransparent(winTransparency, guideWin)
         guiObj := guideWin
     } else if (guiObj == notesWin) {
+        if (IsSet(notesWin) && notesWin.Hwnd)
+            try notesWin.GetPos(&prevX, &prevY)
         notesWin.Destroy()
         notesWin := Gui("+AlwaysOnTop -Caption +ToolWindow +LastFound +E0x20")
         notesWin.BackColor := "000000"
@@ -175,10 +181,18 @@ UpdateNativeGui(guiObj, title, content) {
 
     ; 5. 창 크기 자동 조절 및 출력
     ; 수동 숨김 상태에서도 내용과 AutoSize는 갱신하되 화면에는 표시하지 않습니다.
+    local showOptions := "AutoSize NoActivate"
     if overlayManualOff
-        guiObj.Show("AutoSize NoActivate Hide")
-    else
-        guiObj.Show("AutoSize NoActivate")
+        showOptions .= " Hide"
+
+    if (guiObj == guideWin) {
+        ; 기존 위치가 확보되었으면 그 위치로, 없다면 ini 설정 위치로 설정
+        local targetX := (prevX !== "") ? prevX : guideX
+        local targetY := (prevY !== "") ? prevY : guideY
+        guiObj.Show(showOptions . " x" . targetX . " y" . targetY)
+    } else {
+        guiObj.Show(showOptions)
+    }
 
     ; 6. 가이드 창을 기준으로 노트/핸들/액트 선택창을 일괄 재배치
     PositionAttachedWindows()
