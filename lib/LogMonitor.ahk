@@ -81,11 +81,11 @@ ProcessLogLines(logText) {
             
             isLevel1Generating := false ; 다른 지역 진입 시 플래그 리셋
 
-            if IsTownZone(zoneName)
-                continue
-            UpdateActInfo(zoneName)
-            SetNote(zoneName)
-            RememberLastZone(zoneName)
+            ; 캠페인 지역일 때만 액트 노트와 마지막 진행 지역을 갱신합니다.
+            if UpdateActInfo(zoneName) {
+                SetNote(zoneName)
+                RememberLastZone(zoneName)
+            }
         }
         else if InStr(l, "레벨이 되었습니다") {
             ;ToolTip("Level Up!")

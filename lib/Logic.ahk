@@ -1,20 +1,5 @@
 #Requires AutoHotkey v2.0
 
-; 마을 지역 여부를 판별하는 함수
-IsTownZone(zoneName) {
-    global townZones
-    target := Trim(zoneName)
-    for town in townZones {
-        if (town = "은신처") {
-            if InStr(target, "은신처")
-                return true
-        } else if (target = town) {
-            return true
-        }
-    }
-    return false
-}
-
 ; 액트를 수동으로 설정하는 함수
 ManualSetAct(actNum) {
     global currentAct, currentPart, guidePath, notesPath, baseDataPath, guideWin, notesWin, actDDL
@@ -42,35 +27,15 @@ ManualSetAct(actNum) {
 
 ; 현재 존을 바탕으로 Act와 Part 정보를 업데이트하고 경로를 재설정하는 함수
 UpdateActInfo(zoneName) {
-    global currentAct, currentPart, guidePath, notesPath, baseDataPath, guideWin, zoneData, townZones, actDDL
+    global currentAct, currentPart, guidePath, notesPath, baseDataPath, guideWin, zoneData, actDDL
     
-    ; 현재 액트의 데이터 찾기
-    currentActData := ""
-    for data in zoneData {
-        if (data.act = currentAct) {
-            currentActData := data
-            break
-        }
-    }
-
-    ; --- 액트 전환 로직 개선 ---
-    ; 1. 현재 구역이 마을인 경우: 
-    ;    - 만약 이 마을이 현재 액트의 '거점(town)'이라면, 현재 액트를 유지합니다.
-    ;    - 만약 다른 액트의 거점이라면 해당 액트로 이동을 고려할 수 있지만, 
-    ;      일반적으로 다음 액트의 첫 지역 진입 시점에 전환하는 것이 더 정확합니다.
-    if IsTownZone(zoneName) {
-        ; 현재 액트의 마을인지 확인
-        if (currentActData != "" && Trim(zoneName) = Trim(currentActData.town)) {
-            return ; 현재 액트 마을이므로 업데이트 불필요
-        }
-        ; 다른 마을인 경우에도 일단 유지 (다음 구역 진입 시 판단)
-        return 
-    }
-    
+    targetZoneName := Trim(zoneName)
     candidates := []
     for i, data in zoneData {
         for z in data.zones {
-            if InStr(Trim(z), Trim(zoneName)) {
+            ; kdata의 앞쪽 지역 레벨을 제거한 뒤 정확히 비교합니다.
+            dataZoneName := RegExReplace(Trim(z), "^\d+\s+", "")
+            if (dataZoneName = targetZoneName) {
                 candidates.Push(i)
                 break
             }
@@ -78,7 +43,7 @@ UpdateActInfo(zoneName) {
     }
 
     if (candidates.Length = 0)
-        return
+        return false ; 마을, 미궁 등 캠페인 외 지역은 기존 상태 유지
 
     currentActNum := SubStr(currentAct, 5) + 0
     chosenIdx := -1
@@ -118,7 +83,7 @@ UpdateActInfo(zoneName) {
     }
 
     if (chosenIdx = -1)
-        return
+        return false
 
     target := zoneData[chosenIdx]
     if (target.act != currentAct) {
@@ -141,6 +106,8 @@ UpdateActInfo(zoneName) {
         ; 자동 변경된 액트 정보 저장
         SaveSetting("Status", "lastAct", currentAct)
     }
+
+    return true
 }
 
 ; 특정 존의 내용만 필터링하여 표시 (메모리 캐시 사용)

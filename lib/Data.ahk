@@ -2,7 +2,6 @@
 
 ; 전역 데이터 변수
 global zoneData := []
-global townZones := []
 global noteMap := Map()
 
 ; 해당 액트의 노트를 메모리에 캐싱하는 함수
@@ -48,7 +47,7 @@ LoadNotesToMap(filePath) {
 
 ; kdata.json 로드 함수
 LoadKData() {
-    global zoneData, townZones
+    global zoneData
     
     try {
         if !FileExist("kdata.json") {
@@ -63,15 +62,9 @@ LoadKData() {
             zoneData.Push({
                 act: zoneEntry["act"], 
                 part: zoneEntry["part"], 
-                town: zoneEntry.Has("town") ? zoneEntry["town"] : "", ; 액트별 마을/거점 정보 추가
+                town: zoneEntry.Has("town") ? zoneEntry["town"] : "",
                 zones: zoneEntry["list"]
             })
-        }
-        
-        if jsonParsedData.Has("town_zones") {
-            for townName in jsonParsedData["town_zones"] {
-                townZones.Push(townName)
-            }
         }
     } catch as e {
         MsgBox("kdata.json 파일을 읽거나 분석하는 데 실패했습니다: " . e.Message)
