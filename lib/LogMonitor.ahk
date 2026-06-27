@@ -6,6 +6,7 @@ global logFile := ""
 ; 로그 감시 시작 함수
 InitLogMonitor() {
     global logFile, logPath
+    selectedManually := false
     
     ; 1. 먼저 실행 중인 게임에서 로그 경로를 자동으로 찾음
     autoPath := GetAutoLogPath()
@@ -21,6 +22,7 @@ InitLogMonitor() {
             return
         }
         logPath := selectedPath
+        selectedManually := true
     }
     
     try {
@@ -29,6 +31,13 @@ InitLogMonitor() {
         SetTimer(WatchLog, 1000)
     } catch as e {
         MsgBox("로그 파일을 열 수 없습니다: " e.Message)
+        return
+    }
+
+    if selectedManually {
+        try SaveSetting("General", "LogPath", logPath)
+        catch as e
+            MsgBox("로그 파일 경로를 설정에 저장하지 못했습니다: " e.Message)
     }
 }
 

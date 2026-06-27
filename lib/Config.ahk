@@ -15,7 +15,7 @@ global lastZone := "해안 지대"
 LoadSettings() {
     global iniPath, guideX, guideY
     global fontName, fontSizeTitle, fontSizeContent, winTransparency
-    global currentAct, currentPart, guidePath, notesPath, baseDataPath, toggleHotkey, adminAutoRun, lastZone
+    global currentAct, currentPart, guidePath, notesPath, baseDataPath, toggleHotkey, adminAutoRun, lastZone, logPath
 
     ; config.ini 파일이 없으면 기본 설정값으로 자동 생성
     if !FileExist(iniPath) {
@@ -31,6 +31,7 @@ LoadSettings() {
     winTransparency := ReadSetting("Style", "Transparency", 128)
     toggleHotkey := ReadSetting("Hotkey", "Toggle", "F10")
     adminAutoRun := ReadSetting("General", "AdminAutoRun", 0)
+    logPath := ReadSetting("General", "LogPath", logPath)
     
     ; 마지막 액트 정보 로드 및 경로 동기화
     currentAct := ReadSetting("Status", "lastAct", "Act 1")
@@ -61,6 +62,7 @@ WriteDefaultSettings() {
         . "lastZone=해안 지대`n"
         . "[General]`n"
         . "AdminAutoRun=0`n"
+        . "LogPath=C:\Kakaogames\Path of Exile\logs\KakaoClient.txt`n"
 
     FileAppend(defaultText, iniPath, "UTF-8")
 }
