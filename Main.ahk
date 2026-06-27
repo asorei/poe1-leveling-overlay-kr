@@ -15,6 +15,11 @@ global toggleHotkey := "" ; 초기값 할당으로 unassigned 에러 방지
 
 ; --- 초기화 시퀀스 ---
 
+; 프로젝트 전용 트레이 아이콘 설정
+trayIconPath := A_ScriptDir "\assets\tray-icon.ico"
+if FileExist(trayIconPath)
+    TraySetIcon(trayIconPath)
+
 ; 1. 설정 로드
 LoadSettings()
 
