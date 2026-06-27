@@ -1,6 +1,6 @@
 #Requires AutoHotkey v2.0
 
-global logPath := "C:\Daum Games\Path of Exile\logs\KakaoClient.txt"
+global logPath := "C:\Kakaogames\Path of Exile\logs\KakaoClient.txt"
 global logFile := ""
 
 ; 로그 감시 시작 함수
