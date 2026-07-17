@@ -11,11 +11,24 @@ global toggleHotkey := ""
 global adminAutoRun := 0
 global lastZone := "해안 지대"
 
+; 빌드 플래너(스킬트리 오버레이) 설정 변수
+global treeX := 100
+global treeY := 100
+global treeW := 600
+global treeH := 450
+global treeTransparency := 200
+global toggleTreeHotkey := "F4"
+global toggleTreeLockHotkey := "+Space"
+global treePrevHotkey := "^Left"
+global treeNextHotkey := "^Right"
+global treeLocked := 0
+
 ; 설정 초기화 및 로드 함수
 LoadSettings() {
     global iniPath, guideX, guideY
     global fontName, fontSizeTitle, fontSizeContent, winTransparency
     global currentAct, currentPart, guidePath, notesPath, baseDataPath, toggleHotkey, adminAutoRun, lastZone, logPath
+    global treeX, treeY, treeW, treeH, treeTransparency, toggleTreeHotkey, toggleTreeLockHotkey, treePrevHotkey, treeNextHotkey, treeLocked
 
     ; config.ini 파일이 없으면 기본 설정값으로 자동 생성
     if !FileExist(iniPath) {
@@ -33,6 +46,18 @@ LoadSettings() {
     adminAutoRun := ReadSetting("General", "AdminAutoRun", 0)
     logPath := ReadSetting("General", "LogPath", logPath)
     
+    ; 빌드 플래너 설정 로드
+    treeX := Integer(ReadSetting("WindowPos", "treeX", 100))
+    treeY := Integer(ReadSetting("WindowPos", "treeY", 100))
+    treeW := Integer(ReadSetting("WindowPos", "treeW", 600))
+    treeH := Integer(ReadSetting("WindowPos", "treeH", 450))
+    treeTransparency := Integer(ReadSetting("Style", "treeTransparency", 200))
+    toggleTreeHotkey := ReadSetting("Hotkey", "ToggleTree", "F4")
+    toggleTreeLockHotkey := ReadSetting("Hotkey", "ToggleTreeLock", "+Space")
+    treePrevHotkey := ReadSetting("Hotkey", "TreePrev", "^Left")
+    treeNextHotkey := ReadSetting("Hotkey", "TreeNext", "^Right")
+    treeLocked := Integer(ReadSetting("General", "TreeLocked", 0))
+    
     ; 마지막 액트 정보 로드 및 경로 동기화
     currentAct := ReadSetting("Status", "lastAct", "Act 1")
     lastZone := ReadSetting("Status", "lastZone", "해안 지대")
@@ -49,19 +74,29 @@ WriteDefaultSettings() {
     defaultText := "[WindowPos]`n"
         . "guideX=1229`n"
         . "guideY=251`n"
+        . "treeX=100`n"
+        . "treeY=100`n"
+        . "treeW=600`n"
+        . "treeH=450`n"
         . "[Font]`n"
         . "Name=Segoe UI`n"
         . "SizeTitle=13`n"
         . "SizeContent=11`n"
         . "[Style]`n"
         . "Transparency=128`n"
+        . "treeTransparency=200`n"
         . "[Hotkey]`n"
         . "Toggle=F5`n"
+        . "ToggleTree=F4`n"
+        . "ToggleTreeLock=+Space`n"
+        . "TreePrev=^Left`n"
+        . "TreeNext=^Right`n"
         . "[Status]`n"
         . "lastAct=Act 1`n"
         . "lastZone=해안 지대`n"
         . "[General]`n"
         . "AdminAutoRun=0`n"
+        . "TreeLocked=0`n"
         . "LogPath=C:\Kakaogames\Path of Exile\logs\KakaoClient.txt`n"
 
     FileAppend(defaultText, iniPath, "UTF-8")

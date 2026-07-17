@@ -286,7 +286,7 @@ SyncFollow() {
 
 ; 설정 GUI 출력
 ShowSettingsGui() {
-    global fontName, fontSizeTitle, fontSizeContent, winTransparency, toggleHotkey
+    global fontName, fontSizeTitle, fontSizeContent, winTransparency, treeTransparency, toggleHotkey, toggleTreeHotkey, toggleTreeLockHotkey, treePrevHotkey, treeNextHotkey
 
     fontList := Map()
     Loop Reg, "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts" {
@@ -310,6 +310,17 @@ ShowSettingsGui() {
     fontGui := Gui("+AlwaysOnTop", "프로그램 설정")
     fontGui.SetFont("s10", "Malgun Gothic")
     
+    ; 설정창이 열려있는 동안 기존 단축키 오동작 방지 및 단축키 변경이 원활하도록 핫키를 일시 중지합니다.
+    Suspend(true)
+    
+    fontGui.OnEvent("Close", (*) => OnSettingsClose())
+    fontGui.OnEvent("Escape", (*) => OnSettingsClose())
+    
+    OnSettingsClose() {
+        Suspend(false)
+        fontGui.Destroy()
+    }
+    
     fontGui.Add("Text",, "시스템 폰트 선택:")
     ddlName := fontGui.Add("DropDownList", "w250 Choose" . currentIdx, fontsArray)
     fontGui.Add("Text",, "제목 크기:")
@@ -318,15 +329,25 @@ ShowSettingsGui() {
     editContentSize := fontGui.Add("Edit", "w50", fontSizeContent)
     fontGui.Add("Text",, "배경 투명도 (0: 투명, 255: 불투명):")
     sliderTrans := fontGui.Add("Slider", "w250 Range0-255", winTransparency)
+    fontGui.Add("Text",, "스킬트리 오버레이 투명도 (0: 투명, 255: 불투명):")
+    sliderTreeTrans := fontGui.Add("Slider", "w250 Range0-255", treeTransparency)
     fontGui.Add("Text",, "온/오프 단축키:")
     hkCtrl := fontGui.Add("Hotkey", "w250", toggleHotkey)
+    fontGui.Add("Text",, "스킬트리 오버레이 단축키:")
+    hkTreeCtrl := fontGui.Add("Hotkey", "w250", toggleTreeHotkey)
+    fontGui.Add("Text",, "스킬트리 잠금/해제 단축키:")
+    hkTreeLockCtrl := fontGui.Add("Hotkey", "w250", toggleTreeLockHotkey)
+    fontGui.Add("Text",, "스킬트리 이전 이미지 단축키:")
+    hkTreePrevCtrl := fontGui.Add("Hotkey", "w250", treePrevHotkey)
+    fontGui.Add("Text",, "스킬트리 다음 이미지 단축키:")
+    hkTreeNextCtrl := fontGui.Add("Hotkey", "w250", treeNextHotkey)
     
     btnSave := fontGui.Add("Button", "w250 h40 Default", "저장 및 적용")
-    btnSave.OnEvent("Click", (*) => SaveAndApply(ddlName.Text, editTitleSize.Value, editContentSize.Value, sliderTrans.Value, hkCtrl.Value))
+    btnSave.OnEvent("Click", (*) => SaveAndApply(ddlName.Text, editTitleSize.Value, editContentSize.Value, sliderTrans.Value, sliderTreeTrans.Value, hkCtrl.Value, hkTreeCtrl.Value, hkTreeLockCtrl.Value, hkTreePrevCtrl.Value, hkTreeNextCtrl.Value))
 
     fontGui.Show()
 
-    SaveAndApply(n, st, sc, tr, hk) {
+    SaveAndApply(n, st, sc, tr, ttr, hk, hkt, hktl, hktp, hktn) {
         ; 입력값 검증 (비정상 입력값으로 인한 재부팅 무한 크래시 락 방지)
         if (!IsInteger(st) || Integer(st) <= 0 || Integer(st) > 100) {
             MsgBox("제목 폰트 크기는 1에서 100 사이의 정수여야 합니다.", "설정 오류", "Icon! 4096")
@@ -340,12 +361,21 @@ ShowSettingsGui() {
             MsgBox("투명도는 0에서 255 사이의 정수여야 합니다.", "설정 오류", "Icon! 4096")
             return
         }
+        if (!IsInteger(ttr) || Integer(ttr) < 0 || Integer(ttr) > 255) {
+            MsgBox("스킬트리 투명도는 0에서 255 사이의 정수여야 합니다.", "설정 오류", "Icon! 4096")
+            return
+        }
 
         SaveSetting("Font", "Name", n)
         SaveSetting("Font", "SizeTitle", Integer(st))
         SaveSetting("Font", "SizeContent", Integer(sc))
         SaveSetting("Style", "Transparency", Integer(tr))
+        SaveSetting("Style", "treeTransparency", Integer(ttr))
         SaveSetting("Hotkey", "Toggle", hk)
+        SaveSetting("Hotkey", "ToggleTree", hkt)
+        SaveSetting("Hotkey", "ToggleTreeLock", hktl)
+        SaveSetting("Hotkey", "TreePrev", hktp)
+        SaveSetting("Hotkey", "TreeNext", hktn)
         
         fontGui.Opt("-AlwaysOnTop") ; 설정창의 AlwaysOnTop 속성을 일시적으로 해제
         MsgBox("설정이 저장되었습니다. 프로그램을 재시작합니다.", "설정 저장", 4096)
@@ -356,6 +386,7 @@ ShowSettingsGui() {
 ; 오버레이 창들을 숨기는 함수
 HideOverlayWindows() {
     global guideWin, notesWin, actSelectorGui, guideHandle
+    global treeWin
     
     ; 각 창이 존재하고 유효한 경우에만 숨김 처리
     if IsSet(guideWin) && guideWin.Hwnd
@@ -366,11 +397,14 @@ HideOverlayWindows() {
         actSelectorGui.Hide()
     if IsSet(guideHandle) && guideHandle.Hwnd
         guideHandle.Hide()
+    if IsSet(treeWin) && treeWin.Hwnd
+        treeWin.Hide()
 }
 
 ; 오버레이 창들을 다시 보이게 하는 함수
 ShowOverlayWindows() {
     global guideWin, notesWin, actSelectorGui, guideHandle, overlayManualOff
+    global treeWin, treeVisible
     
     ; 사용자가 수동으로 끈 상태라면 다시 보여주지 않음
     if overlayManualOff
@@ -385,6 +419,8 @@ ShowOverlayWindows() {
         actSelectorGui.Show("NoActivate")
     if IsSet(guideHandle) && guideHandle.Hwnd
         guideHandle.Show("NoActivate")
+    if IsSet(treeWin) && treeWin.Hwnd && treeVisible
+        treeWin.Show("NoActivate")
     PositionAttachedWindows()
 }
 

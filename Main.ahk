@@ -12,6 +12,7 @@ global toggleHotkey := "" ; 초기값 할당으로 unassigned 에러 방지
 #Include lib\LogMonitor.ahk
 #Include lib\LogFinder.ahk
 #Include lib\GUI.ahk
+#Include lib\BuildPlanner.ahk
 
 ; --- 초기화 시퀀스 ---
 
@@ -35,13 +36,41 @@ LoadNotesToMap(notesPath)
 
 ; 3. GUI 생성
 CreateWindows()
+InitBuildPlanner()
 
 ; 4. 로그 감시 시작
 InitLogMonitor()
 
 ; 5. 토글 단축키 등록
-if (toggleHotkey != "")
-    Hotkey(toggleHotkey, ToggleOverlay)
+if (toggleHotkey != "") {
+    try {
+        Hotkey(toggleHotkey, ToggleOverlay)
+    } catch as e {
+        ToolTip("가이드 토글 단축키 등록에 실패했습니다.")
+        SetTimer(() => ToolTip(), -3000)
+    }
+}
+
+; 5.1 빌드 플래너 단축키 등록
+if (toggleTreeHotkey != "") {
+    try {
+        Hotkey(toggleTreeHotkey, ToggleTreeOverlay)
+        if (toggleTreeLockHotkey != "") {
+            Hotkey(toggleTreeLockHotkey, ToggleTreeLock)
+            Hotkey(toggleTreeLockHotkey . " UP", (*) => "") ; 릴리즈 시 오작동 방지
+        }
+        Hotkey("^" . toggleTreeHotkey, NextTreeImage)    ; Ctrl + 단축키: 다음 이미지로 전환
+        
+        ; 글로벌 페이지 이동 단축키 등록
+        if (treePrevHotkey != "")
+            Hotkey(treePrevHotkey, PrevTreeImage)
+        if (treeNextHotkey != "")
+            Hotkey(treeNextHotkey, NextTreeImage)
+    } catch as e {
+        ToolTip("일부 스킬트리 단축키 등록에 실패했습니다.`n(단축키가 중복되었거나 올바르지 않습니다.)")
+        SetTimer(() => ToolTip(), -3000)
+    }
+}
 
 ; --- 트레이 메뉴 설정 ---
 A_TrayMenu.Delete()
@@ -49,6 +78,8 @@ A_TrayMenu.Add("프로그램 설정", (*) => ShowSettingsGui())
 A_TrayMenu.Add("관리자 권한 자동 실행", ToggleAdminSetting)
 if adminAutoRun
     A_TrayMenu.Check("관리자 권한 자동 실행")
+
+
 
 A_TrayMenu.Add() ; 구분선
 A_TrayMenu.Add("재시작", (*) => Reload())

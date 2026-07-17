@@ -46,16 +46,10 @@ IsGameRunning() {
     return false
 }
 
-; 프로세스 이름을 통해 실행 파일의 전체 경로를 가져오는 함수 (WMI 사용)
+; 프로세스 이름을 통해 실행 파일의 전체 경로를 가져오는 함수 (내장 함수 사용)
 GetProcessPath(exeName) {
-    try {
-        wmi := ComObjGet("winmgmts:")
-        query := "Select ExecutablePath from Win32_Process where Name = '" . exeName . "'"
-        for process in wmi.ExecQuery(query) {
-            return process.ExecutablePath
-        }
-    } catch {
-        return ""
+    if pid := ProcessExist(exeName) {
+        try return ProcessGetPath(pid)
     }
     return ""
 }
